@@ -1,113 +1,176 @@
-const CLOUD_NAME = "dr4bnbews";
-const UPLOAD_PRESET = "vacante_upload";
-
-/* Login */
+/* ------------------------------
+   LOGIN
+------------------------------ */
+const loginOverlay = document.getElementById("login-overlay");
 const loginBtn = document.getElementById("login-btn");
+const loginError = document.getElementById("login-error");
+
+const VALID_USER = "VACANTE";
+const VALID_PASS = "VACANTE";
+
 loginBtn.addEventListener("click", () => {
   const u = document.getElementById("user").value.trim();
   const p = document.getElementById("pass").value.trim();
-  if (u === "VACANTE" && p === "VACANTE") {
-    document.getElementById("login-overlay").style.display = "none";
+
+  if (u === VALID_USER && p === VALID_PASS) {
+    loginOverlay.style.display = "none";
     document.getElementById("app").style.display = "block";
     loadAlbums();
   } else {
-    document.getElementById("login-error").textContent = "Date incorecte";
+    loginError.textContent = "Date incorecte";
   }
 });
 
-/* Storage */
+/* ------------------------------
+   STORAGE
+------------------------------ */
 let albums = [];
+
 function saveData() {
   localStorage.setItem("albums", JSON.stringify(albums));
 }
+
 function loadAlbums() {
   const saved = localStorage.getItem("albums");
   albums = saved ? JSON.parse(saved) : [];
   renderAlbums();
 }
 
-/* Albums */
-document.getElementById("add-album-btn").addEventListener("click", () => {
+/* ------------------------------
+   ALBUMS
+------------------------------ */
+const albumsContainer = document.getElementById("albums-container");
+const addAlbumBtn = document.getElementById("add-album-btn");
+
+addAlbumBtn.addEventListener("click", () => {
   const title = prompt("Nume album:");
   if (!title) return;
   albums.push({ title, media: [] });
   saveData();
   renderAlbums();
 });
+
 function renderAlbums() {
-  const container = document.getElementById("albums-container");
-  container.innerHTML = "";
-  albums.forEach((album, i) => {
+  albumsContainer.innerHTML = "";
+  albums.forEach((album, index) => {
     const card = document.createElement("div");
     card.className = "album-card";
-    card.innerHTML = `<div class="album-title">${album.title}</div><div class="album-count">${album.media.length} fișiere</div>`;
-    card.addEventListener("click", () => openAlbum(i));
-    container.appendChild(card);
+    card.innerHTML = `
+      <div class="album-title">${album.title}</div>
+      <div class="album-count">${album.media.length} fișiere</div>
+    `;
+    card.addEventListener("click", () => openAlbum(index));
+    albumsContainer.appendChild(card);
   });
 }
 
-/* Gallery */
+/* ------------------------------
+   GALLERY
+------------------------------ */
+const albumsView = document.getElementById("albums-view");
+const galleryView = document.getElementById("gallery-view");
+const galleryGrid = document.getElementById("gallery");
+const albumTitleInput = document.getElementById("album-title-input");
+const albumPhotosCount = document.getElementById("album-photos-count");
+
 let currentAlbumIndex = null;
-function openAlbum(i) {
-  currentAlbumIndex = i;
-  document.getElementById("albums-view").classList.remove("active-view");
-  document.getElementById("gallery-view").classList.add("active-view");
-  document.getElementById("album-title-input").value = albums[i].title;
+
+function openAlbum(index) {
+  currentAlbumIndex = index;
+  albumsView.classList.remove("active-view");
+  galleryView.classList.add("active-view");
+  albumTitleInput.value = albums[index].title;
   renderGallery();
 }
+
 document.getElementById("back-to-albums").addEventListener("click", () => {
-  document.getElementById("gallery-view").classList.remove("active-view");
-  document.getElementById("albums-view").classList.add("active-view");
+  galleryView.classList.remove("active-view");
+  albumsView.classList.add("active-view");
   saveData();
 });
-document.getElementById("album-title-input").addEventListener("input", (e) => {
-  albums[currentAlbumIndex].title = e.target.value;
+
+albumTitleInput.addEventListener("input", () => {
+  albums[currentAlbumIndex].title = albumTitleInput.value;
   saveData();
 });
+
 function renderGallery() {
   const album = albums[currentAlbumIndex];
-  const grid = document.getElementById("gallery");
-  grid.innerHTML = "";
-  document.getElementById("album-photos-count").textContent = `${album.media.length} fișiere`;
+  galleryGrid.innerHTML = "";
+  albumPhotosCount.textContent = `${album.media.length} fișiere`;
+
   album.media.forEach((item, i) => {
     const div = document.createElement("div");
     div.className = "media-item";
-    div.innerHTML = item.type === "image" ? `<img src="${item.url}" alt="">` : `<video src="${item.url}" controls></video>`;
+    if (item.type === "image") {
+      div.innerHTML = `<img src="${item.url}" alt="">`;
+    } else {
+      div.innerHTML = `<video src="${item.url}" controls></video>`;
+    }
     div.addEventListener("click", () => openLightbox(i));
-    grid.appendChild(div);
+    galleryGrid.appendChild(div);
   });
 }
 
-/* Upload to Cloudinary */
-document.getElementById("file-input").addEventListener("change", async (e) => {
-  const files = e.target.files;
+/* ------------------------------
+   CLOUDINARY UPLOAD
+------------------------------ */
+const fileInput = document.getElementById("file-input");
+
+const CLOUD_NAME = "dr4bnbews";      // cloud name-ul tău
+const UPLOAD_PRESET = "vacante_upload";  // presetul unsigned creat
+
+fileInput.addEventListener("change", async (event) => {
+  const files = event.target.files;
   for (let file of files) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
+
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
       method: "POST",
       body: formData
     });
     const data = await res.json();
-    albums[currentAlbumIndex].media.push({
+
+    const album = albums[currentAlbumIndex];
+    album.media.push({
       url: data.secure_url,
       type: file.type.startsWith("image") ? "image" : "video"
     });
+
     saveData();
     renderGallery();
   }
 });
 
-/* Lightbox */
+/* ------------------------------
+   LIGHTBOX
+------------------------------ */
+const lightbox = document.getElementById("lightbox");
+const lbImg = document.getElementById("lightbox-img");
+const lbVideo = document.getElementById("lightbox-video");
+
 let currentMediaIndex = 0;
+
 function openLightbox(i) {
   currentMediaIndex = i;
-  const item = albums[currentAlbumIndex].media[i];
-  const lb = document.getElementById("lightbox");
-  const img = document.getElementById("lightbox-img");
-  const vid = document.getElementById("lightbox-video");
-  img.style.display = "none";
-  vid.style.display = "none";
+  showMedia();
+  lightbox.classList.remove("hidden");
+}
+
+function showMedia() {
+  const item = albums[currentAlbumIndex].media[currentMediaIndex];
+  lbImg.style.display = "none";
+  lbVideo.style.display = "none";
+
   if (item.type === "image") {
-    img.src
+    lbImg.src = item.url;
+    lbImg.style.display = "block";
+  } else {
+    lbVideo.src = item.url;
+    lbVideo.style.display = "block";
+  }
+}
+
+document.getElementById("lightbox-close

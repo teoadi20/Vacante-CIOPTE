@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>VACANTE CIOPTE - Galerie Premium</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div id="login-overlay">
+    <div id="login-box">
+      <h1>VACANTE CIOPTE</h1>
+      <p class="login-subtitle">Galerie privată, acces restricționat</p>
+      <label>Utilizator</label>
+      <input type="text" id="user">
+      <label>Parolă</label>
+      <input type="password" id="pass">
+      <button id="login-btn">Intră în galerie</button>
+      <p id="login-error"></p>
+    </div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <header class="top-bar">
+      <div class="brand">
+        <span class="logo-dot"></span>
+        <span class="brand-title">VACANTE CIOPTE</span>
+      </div>
+      <div class="top-actions">
+        <span id="current-view-label">Albumele mele</span>
+        <button id="logout-btn" class="ghost-btn">Logout</button>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <section id="albums-view" class="view active-view">
+        <div class="section-header">
+          <h2>Albume</h2>
+          <p>Organizează-ți momentele în colecții elegante.</p>
+        </div>
+        <button id="add-album-btn" class="add-btn">+ Album nou</button>
+        <div id="albums-container" class="albums-grid"></div>
+      </section>
+
+      <section id="gallery-view" class="view">
+        <div class="gallery-header">
+          <button id="back-to-albums" class="ghost-btn small-btn">← Înapoi</button>
+          <div class="album-title-wrapper">
+            <input type="text" id="album-title-input" class="album-title-input">
+            <span id="album-photos-count" class="photos-count"></span>
+          </div>
+          <div class="upload-wrapper">
+            <label for="file-input" class="upload-label">Încarcă</label>
+            <input type="file" id="file-input" multiple>
+          </div>
+        </div>
+        <div id="gallery" class="gallery-grid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="lightbox" class="lightbox hidden">
+    <div class="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+      <button id="lightbox-close" class="lightbox-btn close-btn">✕</button>
+      <button id="lightbox-prev" class="lightbox-btn nav-btn prev-btn">‹</button>
+      <button id="lightbox-next" class="lightbox-btn nav-btn next-btn">›</button>
+      <div class="lightbox-media-wrapper">
+        <img id="lightbox-img" class="lightbox-media" alt="">
+        <video id="lightbox-video" class="lightbox-media" controls></video>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
